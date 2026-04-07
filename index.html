@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 말하는 스케치북</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  min-height:100%;
+  background:#1A0A3C;
+  display:flex;align-items:flex-start;justify-content:center;
+  font-family:'Nunito',sans-serif;padding:16px;
+}
+
+/* ── book frame ── */
+.book{
+  display:flex;flex-direction:column;
+  width:min(760px,98vw);
+  background:#5B3FA8;
+  border-radius:24px;
+  padding:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.45);
+}
+
+/* ── top bar ── */
+.topbar{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 6px 10px;
+}
+.topbar-btn{
+  width:44px;height:44px;border-radius:14px;
+  background:#F5C800;border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .12s,filter .12s;flex-shrink:0;
+  user-select:none;
+  box-shadow:0 3px 0 #B8940A;
+}
+.topbar-btn:hover{transform:scale(1.08);filter:brightness(1.08);}
+.topbar-btn:active{transform:scale(0.96);box-shadow:0 1px 0 #B8940A;}
+.topbar-btn svg{width:24px;height:24px;}
+.app-title{
+  font-family:'Gaegu',cursive;font-size:28px;font-weight:700;
+  color:#F5C800;margin-left:6px;
+  text-shadow:0 2px 0 rgba(0,0,0,0.25);
+  letter-spacing:-0.3px;
+}
+
+/* ── prompt bar ── */
+.prompt-bar{
+  background:#4A2E96;
+  border-radius:14px;
+  padding:9px 12px;margin-bottom:8px;
+  display:flex;align-items:center;gap:10px;
+  border:2px solid #7B5FD4;
+}
+.prompt-label{
+  font-family:'Gaegu',cursive;font-size:15px;color:#F5C800;
+  white-space:nowrap;flex-shrink:0;font-weight:700;
+}
+.prompt-input{
+  flex:1;background:#FFFFFF18;border:2px solid #7B5FD4;border-radius:10px;
+  padding:7px 12px;font-family:'Gaegu',cursive;font-size:15px;
+  color:#fff;outline:none;transition:border-color .15s;
+}
+.prompt-input:focus{border-color:#F5C800;}
+.prompt-input::placeholder{color:#FFFFFF55;}
+
+/* ── main area ── */
+.main{
+  display:flex;gap:8px;
+  background:#3D2480;
+  border-radius:16px;padding:10px;
+}
+
+/* canvas panel */
+.canvas-panel{
+  flex:1;background:#FFFFFF;border-radius:14px;
+  border:3px solid #7B5FD4;
+  position:relative;overflow:hidden;min-height:440px;
+}
+canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none;}
+.draw-hint{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;transition:opacity .4s;
+}
+.draw-hint-emoji{font-size:48px;display:block;margin-bottom:8px;}
+.draw-hint-text{font-family:'Gaegu',cursive;font-size:20px;color:#B0A0D8;}
+
+/* sidebar */
+.sidebar{width:118px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+
+/* palette */
+.palette-panel{
+  background:#4A2E96;border-radius:14px;
+  border:2px solid #7B5FD4;padding:10px;
+}
+.palette-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:9px;}
+.c-dot{
+  width:100%;aspect-ratio:1;border-radius:50%;cursor:pointer;
+  border:3px solid transparent;transition:transform .12s,border-color .12s;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+.c-dot:hover{transform:scale(1.15);}
+.c-dot.active{border-color:#F5C800;transform:scale(1.2);box-shadow:0 0 0 2px #F5C800;}
+.slider-wrap{
+  background:#3D2480;border-radius:8px;padding:7px 8px;
+  border:1.5px solid #7B5FD4;
+}
+input[type=range].brush-size{
+  width:100%;height:14px;-webkit-appearance:none;appearance:none;
+  background:#7B5FD4;border-radius:7px;cursor:pointer;
+}
+input[type=range].brush-size::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:#F5C800;border:3px solid #B8940A;cursor:pointer;
+  box-shadow:0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* tools */
+.tools-panel{
+  background:#4A2E96;border-radius:14px;border:2px solid #7B5FD4;
+  padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center;
+}
+.tool-btn{
+  width:62px;height:62px;border-radius:14px;
+  background:#3D2480;border:2px solid #7B5FD4;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .12s,background .12s,border-color .12s;
+  user-select:none;
+}
+.tool-btn:hover{transform:scale(1.08);background:#5B3FA8;border-color:#A080E8;}
+.tool-btn.active{background:#F5C800;border-color:#B8940A;box-shadow:0 3px 0 #B8940A;}
+.tool-btn svg{width:34px;height:34px;}
+.tool-divider{width:80%;height:2px;background:#7B5FD4;border-radius:2px;}
+
+/* story button */
+.story-btn{
+  width:62px;height:62px;border-radius:14px;
+  background:#00AAFF;border:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .12s,filter .12s;gap:2px;
+  user-select:none;
+  box-shadow:0 4px 0 #0077CC;
+}
+.story-btn:hover{transform:scale(1.08);filter:brightness(1.1);}
+.story-btn:active{transform:scale(0.97);box-shadow:0 1px 0 #0077CC;}
+.story-btn-icon{font-size:22px;line-height:1;}
+.story-btn-label{
+  font-family:'Gaegu',cursive;font-size:10px;font-weight:700;
+  color:white;line-height:1.25;text-shadow:0 1px 2px rgba(0,0,0,0.2);
+}
+.story-btn:disabled{
+  background:#555580;border-color:#7777AA;cursor:not-allowed;
+  transform:none;box-shadow:none;filter:none;
+}
+
+/* ── story area ── */
+.story-area{
+  background:#3D2480;border-radius:16px;padding:8px 10px;
+  border:2px solid #7B5FD4;margin-top:0;
+}
+.story-inner{
+  background:#FFFFFF12;border-radius:12px;border:2px solid #7B5FD4;
+  min-height:86px;padding:12px 16px;display:flex;align-items:center;gap:14px;
+}
+
+/* hourglass */
+.hg-wrap{width:38px;height:38px;flex-shrink:0;}
+.hg-wrap.thinking{animation:hg-spin .9s linear infinite;transform-origin:center;}
+@keyframes hg-spin{to{transform:rotate(360deg);}}
+
+.story-words{
+  font-family:'Gaegu',cursive;font-size:21px;line-height:1.7;
+  color:#FFFFFF;flex:1;
+}
+.story-placeholder{
+  font-family:'Gaegu',cursive;font-size:16px;color:#A090D0;
+}
+.dots-wrap{display:none;align-items:center;gap:6px;}
+.dot{
+  width:11px;height:11px;background:#F5C800;border-radius:50%;
+  animation:bounce .8s infinite ease-in-out;
+}
+.dot:nth-child(2){animation-delay:.15s;}
+.dot:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,100%{transform:translateY(0);opacity:.6;}50%{transform:translateY(-8px);opacity:1;}}
+
+.speak-row{display:none;align-items:center;gap:8px;padding:6px 0 2px 52px;}
+.speak-btn{
+  display:flex;align-items:center;gap:6px;padding:7px 18px;
+  background:#F5C800;color:#5B3FA8;border:none;border-radius:20px;
+  font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;
+  transition:filter .15s;box-shadow:0 3px 0 #B8940A;
+}
+.speak-btn:hover{filter:brightness(1.08);}
+.speak-btn.speaking{background:#00AAFF;color:white;box-shadow:0 3px 0 #0077CC;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.75;}}
+</style>
+</head>
+<body>
+<div class="book">
+
+  <!-- top bar -->
+  <div class="topbar">
+    <div class="topbar-btn" id="backBtn" title="이전으로">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M15 6L9 12L15 18" stroke="#5B3FA8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="topbar-btn" id="saveBtn" title="그림을 PNG로 저장">
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="3" width="18" height="18" rx="3.5" fill="#5B3FA8"/>
+        <rect x="7" y="3" width="8" height="7" rx="1.5" fill="#B8940A"/>
+        <rect x="13.5" y="4" width="2" height="4" rx="1" fill="#F5C800"/>
+        <path d="M12 11v7M9.5 15.5L12 18l2.5-2.5" stroke="#F5C800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="app-title">🎨 AI 말하는 스케치북</span>
+  </div>
+
+  <!-- prompt bar -->
+  <div class="prompt-bar">
+    <span class="prompt-label">💬 선생님 한마디:</span>
+    <input class="prompt-input" id="teacherPrompt" type="text" maxlength="80"
+      placeholder="예) 오늘은 봄 풍경을 그려봐요! (비워두어도 돼요)">
+  </div>
+
+  <!-- main -->
+  <div class="main">
+    <div class="canvas-panel" id="canvasPanel">
+      <canvas id="c"></canvas>
+      <div class="draw-hint" id="hint">
+        <span class="draw-hint-emoji">✏️</span>
+        <span class="draw-hint-text">여기에 그려봐요!</span>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="palette-panel">
+        <div class="palette-grid" id="palette"></div>
+        <div class="slider-wrap">
+          <input type="range" class="brush-size" id="brushSize" min="2" max="30" value="6" step="1">
+        </div>
+      </div>
+
+      <div class="tools-panel">
+        <!-- pencil -->
+        <div class="tool-btn active" id="penBtn" title="연필">
+          <svg viewBox="0 0 32 32" fill="none">
+            <rect x="13" y="3" width="7" height="22" rx="2" fill="#F2D68A" stroke="#C8A84B" stroke-width="1.5"/>
+            <rect x="13" y="21" width="7" height="5" rx="1" fill="#FFCDD2" stroke="#C8A84B" stroke-width="1.5"/>
+            <polygon points="13,25 19,25 16,30" fill="#E8C49A" stroke="#C8A84B" stroke-width="1.2"/>
+            <rect x="13" y="3" width="7" height="4" rx="2" fill="#D48A6A" stroke="#C8A84B" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="tool-divider"></div>
+        <!-- eraser -->
+        <div class="tool-btn" id="eraserBtn" title="부분 지우개">
+          <svg viewBox="0 0 32 32" fill="none">
+            <rect x="5" y="14" width="22" height="10" rx="4" fill="#F4A6C0" stroke="#C87090" stroke-width="1.5"/>
+            <rect x="17" y="14" width="10" height="10" rx="4" fill="#E88AAA" stroke="#C87090" stroke-width="1.5"/>
+            <line x1="9" y1="22" x2="15" y2="16" stroke="#C87090" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="13" y1="22" x2="19" y2="16" stroke="#C87090" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <!-- clear -->
+        <div class="tool-btn" id="clearBtn" title="전체 지우기">
+          <svg viewBox="0 0 32 32" fill="none">
+            <rect x="8" y="12" width="16" height="15" rx="3" fill="#A080E8" stroke="#7B5FD4" stroke-width="1.5"/>
+            <path d="M6 12h20" stroke="#7B5FD4" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M13 7h6" stroke="#7B5FD4" stroke-width="1.8" stroke-linecap="round"/>
+            <rect x="11" y="16" width="2.5" height="7" rx="1" fill="#fff" opacity="0.7"/>
+            <rect x="14.75" y="16" width="2.5" height="7" rx="1" fill="#fff" opacity="0.7"/>
+            <rect x="18.5" y="16" width="2.5" height="7" rx="1" fill="#fff" opacity="0.7"/>
+          </svg>
+        </div>
+        <div class="tool-divider"></div>
+        <!-- story -->
+        <button class="story-btn" id="storyBtn" disabled title="이야기 만들기">
+          <span class="story-btn-icon">✨</span>
+          <span class="story-btn-label">이야기</span>
+          <span class="story-btn-label">만들기</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- story area -->
+  <div class="story-area">
+    <div class="story-inner">
+      <div class="hg-wrap" id="hgWrap">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+          <rect x="6" y="2" width="24" height="4" rx="2" fill="#F5C800"/>
+          <rect x="6" y="30" width="24" height="4" rx="2" fill="#F5C800"/>
+          <path d="M8 6 Q18 18 28 6 Z" fill="#00AAFF" opacity="0.9"/>
+          <path d="M8 30 Q18 18 28 30 Z" fill="#7B5FD4" opacity="0.9"/>
+          <path d="M12 9 Q18 15 24 9 Z" fill="#F5C800"/>
+          <path d="M14 27 Q18 22 22 27 Z" fill="#F5C800" opacity="0.35"/>
+          <circle cx="18" cy="18" r="1.6" fill="#F5C800" opacity="0.7"/>
+        </svg>
+      </div>
+      <div style="flex:1;">
+        <div class="story-placeholder" id="placeholder">그림을 그리고 ✨ 이야기 만들기를 눌러봐요!</div>
+        <div class="dots-wrap" id="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="story-words" id="storyText" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="speak-row" id="speakRow">
+      <button class="speak-btn" id="speakBtn">🔊 소리로 들어볼게요!</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS = [
+  '#E53935','#FB8C00','#F9A825',
+  '#8D2B2B','#F9CA24','#43A047',
+  '#1E88E5','#26C6A2','#9575CD',
+  '#7B1FA2','#F48FB1','#6D4C41'
+];
+const colorNames = {
+  '#E53935':'빨강','#FB8C00':'주황','#F9A825':'황금','#8D2B2B':'진빨강',
+  '#F9CA24':'노랑','#43A047':'초록','#1E88E5':'파랑','#26C6A2':'청록',
+  '#9575CD':'연보라','#7B1FA2':'보라','#F48FB1':'분홍','#6D4C41':'갈색'
+};
+
+// Palette
+const paletteEl = document.getElementById('palette');
+COLORS.forEach((c, i) => {
+  const d = document.createElement('div');
+  d.className = 'c-dot' + (i === 0 ? ' active' : '');
+  d.style.background = c;
+  d.dataset.color = c;
+  paletteEl.appendChild(d);
+});
+
+// Canvas
+const panel = document.getElementById('canvasPanel');
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let dpr = 1;
+function resizeCanvas() {
+  dpr = window.devicePixelRatio || 1;
+  const r = panel.getBoundingClientRect();
+  canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+  canvas.style.width = r.width + 'px'; canvas.style.height = r.height + 'px';
+  ctx.scale(dpr, dpr);
+}
+window.addEventListener('load', resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
+
+// State
+let isDrawing=false, isEraser=false, hasDrawn=false;
+let color='#E53935', brushSize=6;
+let lastX=0, lastY=0;
+let strokes=[], currentStroke=null, strokeStart=0;
+let speaking=false, currentStory='';
+
+// Palette click
+paletteEl.addEventListener('click', e => {
+  const d = e.target.closest('.c-dot'); if (!d) return;
+  paletteEl.querySelectorAll('.c-dot').forEach(x => x.classList.remove('active'));
+  d.classList.add('active'); color = d.dataset.color;
+  isEraser = false; penBtn.classList.add('active'); eraserBtn.classList.remove('active');
+});
+document.getElementById('brushSize').addEventListener('input', e => { brushSize = parseInt(e.target.value); });
+
+// Tools
+const penBtn    = document.getElementById('penBtn');
+const eraserBtn = document.getElementById('eraserBtn');
+const hgWrap    = document.getElementById('hgWrap');
+
+penBtn.addEventListener('click', () => {
+  isEraser = false; penBtn.classList.add('active'); eraserBtn.classList.remove('active');
+});
+eraserBtn.addEventListener('click', () => {
+  isEraser = !isEraser;
+  eraserBtn.classList.toggle('active', isEraser);
+  penBtn.classList.toggle('active', !isEraser);
+});
+document.getElementById('clearBtn').addEventListener('click', () => {
+  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+  strokes = []; hasDrawn = false;
+  document.getElementById('hint').style.opacity = '1';
+  document.getElementById('storyBtn').disabled = true;
+  document.getElementById('placeholder').style.display = 'block';
+  document.getElementById('storyText').style.display = 'none';
+  document.getElementById('dots').style.display = 'none';
+  document.getElementById('speakRow').style.display = 'none';
+  hgWrap.classList.remove('thinking');
+  stopSpeaking();
+});
+
+// Topbar
+document.getElementById('backBtn').addEventListener('click', () => { if (history.length > 1) history.back(); });
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const off = document.createElement('canvas');
+  off.width = canvas.width; off.height = canvas.height;
+  const oc = off.getContext('2d');
+  oc.fillStyle = '#FFFFFF'; oc.fillRect(0, 0, off.width, off.height);
+  oc.drawImage(canvas, 0, 0);
+  const a = document.createElement('a');
+  a.download = '내그림_' + new Date().toISOString().slice(0,10) + '.png';
+  a.href = off.toDataURL('image/png'); a.click();
+});
+
+// Drawing
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function startDraw(e) {
+  e.preventDefault(); isDrawing = true;
+  const p = getPos(e); lastX = p.x; lastY = p.y;
+  if (!isEraser) { strokeStart = Date.now(); currentStroke = { color, size: brushSize, points: [{x:p.x,y:p.y}], duration_ms: 0 }; }
+}
+function doDraw(e) {
+  e.preventDefault(); if (!isDrawing) return;
+  const p = getPos(e);
+  ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+  ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : color;
+  ctx.lineWidth = isEraser ? brushSize * 2.5 : brushSize;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke();
+  lastX = p.x; lastY = p.y;
+  if (!isEraser && currentStroke) currentStroke.points.push({x:p.x,y:p.y});
+  if (!hasDrawn) { hasDrawn = true; document.getElementById('hint').style.opacity='0'; document.getElementById('storyBtn').disabled=false; }
+}
+function endDraw(e) {
+  if (e) e.preventDefault(); if (!isDrawing) return; isDrawing = false;
+  if (!isEraser && currentStroke && currentStroke.points.length > 1) {
+    currentStroke.duration_ms = Date.now() - strokeStart; strokes.push(currentStroke);
+  }
+  currentStroke = null;
+}
+canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', doDraw);
+canvas.addEventListener('mouseup', endDraw); canvas.addEventListener('mouseleave', endDraw);
+canvas.addEventListener('touchstart', startDraw, {passive:false}); canvas.addEventListener('touchmove', doDraw, {passive:false});
+canvas.addEventListener('touchend', endDraw, {passive:false});
+
+// Stroke description
+function describeStroke(s) {
+  const pts = s.points; if (pts.length < 2) return null;
+  const cname = colorNames[s.color] || '색';
+  const thick = s.size <= 6 ? '가는' : s.size <= 14 ? '중간' : '굵은';
+  const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+  const W=maxX-minX, H=maxY-minY;
+  const cW=canvas.width/dpr, cH=canvas.height/dpr;
+  const cx=(minX+maxX)/2/cW, cy=(minY+maxY)/2/cH;
+  let pos = cy<0.35?'위쪽':cy>0.65?'아래쪽':'가운데';
+  if (cx<0.33) pos+=' 왼쪽'; else if (cx>0.67) pos+=' 오른쪽';
+  const spread=Math.sqrt(W*W+H*H);
+  const pathLen=pts.reduce((a,p,i)=>i===0?0:a+Math.hypot(p.x-pts[i-1].x,p.y-pts[i-1].y),0);
+  const straight=spread>0?pathLen/spread:1;
+  const shape=spread<20?'점':straight<1.4?'직선':W>H*2?'가로선':H>W*2?'세로선':straight<2.5?'곡선':'자유로운 선';
+  const sec=Math.round(s.duration_ms/100)/10;
+  return `${pos}에 ${cname} ${thick} ${shape} (${sec}초)`;
+}
+
+// Story
+document.getElementById('storyBtn').addEventListener('click', async () => {
+  if (strokes.length === 0) return;
+  const imgData = canvas.toDataURL('image/png').split(',')[1];
+  const teacherHint = document.getElementById('teacherPrompt').value.trim();
+  const log = strokes.map((s,i)=>{ const d=describeStroke(s); return d?`${i+1}번째: ${d}`:null; }).filter(Boolean).join('\n');
+
+  document.getElementById('placeholder').style.display='none';
+  document.getElementById('storyText').style.display='none';
+  document.getElementById('dots').style.display='flex';
+  document.getElementById('speakRow').style.display='none';
+  hgWrap.classList.add('thinking');
+  document.getElementById('storyBtn').disabled=true;
+  stopSpeaking();
+
+  const hintLine = teacherHint ? `\n오늘의 그리기 주제: "${teacherHint}"\n이 주제를 이야기에 자연스럽게 녹여주세요.\n` : '';
+  const prompt = `당신은 특수교육 학생을 위한 따뜻한 이야기 선생님이에요.
+
+학생이 그림을 그린 순서 기록:
+${log}
+${hintLine}
+완성된 그림도 첨부했어요.
+
+[이야기 만들기 규칙]
+- 그리기 순서와 흐름을 이야기의 뼈대로 삼아주세요.
+  예) 먼저 하늘이 생겼어요 → 그다음 집이 나타났어요 → 마지막으로 아이가 문 앞에 섰어요.
+- 초등학교 특수교육 대상 장애 학생이 이해할 수 있게, 아주 짧고 쉬운 문장 3~4개로만 써주세요.
+- 어려운 낱말은 쓰지 마세요.
+- 그림 속 내용이 살아 움직이는 것처럼 따뜻하고 밝게 써주세요.
+- 이야기만 써주세요. 인사말이나 설명은 필요 없어요.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+      body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:300,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/png',data:imgData}},
+          {type:'text',text:prompt}
+        ]}]
+      })
+    });
+    const data = await res.json();
+    const story = data.content?.find(c=>c.type==='text')?.text || '이야기를 만들지 못했어요. 다시 해볼까요? 😊';
+    document.getElementById('dots').style.display='none';
+    document.getElementById('storyText').textContent=story;
+    document.getElementById('storyText').style.display='block';
+    document.getElementById('speakRow').style.display='flex';
+    hgWrap.classList.remove('thinking');
+    currentStory=story;
+  } catch {
+    document.getElementById('dots').style.display='none';
+    document.getElementById('storyText').textContent='앗! 연결이 안 됐어요. API 키를 확인해볼까요? 😊';
+    document.getElementById('storyText').style.display='block';
+    hgWrap.classList.remove('thinking');
+  }
+  document.getElementById('storyBtn').disabled=false;
+});
+
+// TTS
+function stopSpeaking() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  speaking=false;
+  const b=document.getElementById('speakBtn');
+  b.classList.remove('speaking'); b.textContent='🔊 소리로 들어볼게요!';
+}
+document.getElementById('speakBtn').addEventListener('click', () => {
+  if (!window.speechSynthesis) { alert('이 브라우저는 소리 읽기를 지원하지 않아요.'); return; }
+  if (speaking) { stopSpeaking(); return; }
+  speaking=true;
+  const b=document.getElementById('speakBtn');
+  b.classList.add('speaking'); b.textContent='⏹ 멈추기';
+  const u=new SpeechSynthesisUtterance(currentStory);
+  u.lang='ko-KR'; u.rate=0.85; u.pitch=1.1; u.volume=1;
+  u.onend=u.onerror=()=>{ speaking=false; b.classList.remove('speaking'); b.textContent='🔊 소리로 들어볼게요!'; };
+  window.speechSynthesis.speak(u);
+});
+
+// API Key
+let API_KEY='';
+window.addEventListener('load', () => {
+  const saved=sessionStorage.getItem('sk_key');
+  if (saved) { API_KEY=saved; return; }
+  const k=prompt('Anthropic API 키를 입력해주세요:\n(이 세션에서만 저장돼요)');
+  if (k && k.trim()) { API_KEY=k.trim(); sessionStorage.setItem('sk_key', API_KEY); }
+});
+</script>
+</body>
+</html>
