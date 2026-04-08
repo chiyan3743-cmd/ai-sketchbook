@@ -24,20 +24,13 @@ html,body{
 }
 .main{flex:1;min-height:0;}
 @media (min-width:900px){
-  html,body{overflow:hidden;}
-  .book{height:calc(100vh - 32px);}
-  .main{flex:1;min-height:0;}
-  .canvas-panel{min-height:0;}
-  .sidebar{width:140px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+  .sidebar{width:120px;overflow:hidden;}
   .palette-grid{grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px;}
   .c-dot{box-shadow:none;}
   .slider-wrap{padding:5px 6px;}
   .palette-panel{padding:7px;}
   .tool-btn{width:44px;height:44px;}
   .tool-btn svg{width:24px;height:24px;}
-  .story-btn{width:44px;height:44px;}
-  .story-btn-icon{font-size:16px;}
-  .story-btn-label{font-size:8px;}
   .tools-panel{gap:4px;padding:7px;}
   .tool-divider{margin:1px 0;}
   .story-inner{min-height:60px;padding:8px 12px;}
@@ -82,6 +75,7 @@ html,body{
 .canvas-panel{
   flex:1;background:#FFFFFF;border-radius:14px;
   border:3px solid #7B5FD4;position:relative;overflow:hidden;min-height:0;
+  aspect-ratio:4/3;
 }
 canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none;}
 .draw-hint{
@@ -524,7 +518,7 @@ ${hintLine}
         'X-Title': 'AI Sketchbook'
       },
       body: JSON.stringify({
-        model: 'google/gemma-4-31b-it:free',
+        model: 'nvidia/nemotron-nano-12b-v2-vl:free',
         max_tokens: 300,
         messages: [{
           role: 'user',
