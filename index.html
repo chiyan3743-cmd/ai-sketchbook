@@ -21,13 +21,28 @@ html,body{
   padding:10px;
   box-shadow:0 8px 32px rgba(0,0,0,0.45);
 }
-@media (min-width:768px) and (orientation:landscape){
+@media (min-width:900px){
   html,body{overflow:hidden;}
   .book{height:calc(100vh - 32px);}
   .main{flex:1;min-height:0;}
   .canvas-panel{min-height:0;}
-  .story-inner{min-height:70px;}
-  .story-words{font-size:18px;}
+  .sidebar{width:140px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+  .palette-grid{grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px;}
+  .c-dot{box-shadow:none;}
+  .slider-wrap{padding:5px 6px;}
+  .palette-panel{padding:7px;}
+  .tool-btn{width:44px;height:44px;}
+  .tool-btn svg{width:24px;height:24px;}
+  .story-btn{width:44px;height:44px;}
+  .story-btn-icon{font-size:16px;}
+  .story-btn-label{font-size:8px;}
+  .tools-panel{gap:4px;padding:7px;}
+  .tool-divider{margin:1px 0;}
+  .story-inner{min-height:60px;padding:8px 12px;}
+  .story-words{font-size:17px;}
+  .topbar{padding:4px 6px 6px;}
+  .app-title{font-size:22px;}
+  .prompt-bar{padding:5px 10px;margin-bottom:5px;}
 }
 .topbar{display:flex;align-items:center;gap:10px;padding:6px 6px 10px;}
 .topbar-btn{
@@ -136,7 +151,8 @@ input[type=range].brush-size::-webkit-slider-thumb{
 .dot:nth-child(2){animation-delay:.15s;}
 .dot:nth-child(3){animation-delay:.3s;}
 @keyframes bounce{0%,100%{transform:translateY(0);opacity:.6;}50%{transform:translateY(-8px);opacity:1;}}
-.speak-row{display:none;align-items:center;gap:8px;padding:6px 0 2px 52px;}
+.speak-row{display:flex;align-items:center;gap:8px;padding:6px 4px 2px 4px;flex-wrap:wrap;}
+.speak-btn{display:none;}
 .speak-btn{
   display:flex;align-items:center;gap:6px;padding:7px 18px;
   background:#F5C800;color:#5B3FA8;border:none;border-radius:20px;
@@ -267,12 +283,6 @@ input[type=range].brush-size::-webkit-slider-thumb{
             <rect x="18.5" y="16" width="2.5" height="7" rx="1" fill="#fff" opacity="0.7"/>
           </svg>
         </div>
-        <div class="tool-divider"></div>
-        <button class="story-btn" id="storyBtn" disabled title="이야기 만들기">
-          <span class="story-btn-icon">✨</span>
-          <span class="story-btn-label">이야기</span>
-          <span class="story-btn-label">만들기</span>
-        </button>
       </div>
     </div>
   </div>
@@ -297,6 +307,10 @@ input[type=range].brush-size::-webkit-slider-thumb{
       </div>
     </div>
     <div class="speak-row" id="speakRow">
+      <button class="story-btn" id="storyBtn" disabled title="이야기 만들기" style="width:auto;padding:0 20px;height:44px;flex-direction:row;gap:6px;box-shadow:0 3px 0 #0077CC;">
+        <span class="story-btn-icon">✨</span>
+        <span class="story-btn-label" style="font-size:15px;">이야기 만들기</span>
+      </button>
       <button class="speak-btn" id="speakBtn">🔊 소리로 들어볼게요!</button>
     </div>
   </div>
@@ -394,7 +408,7 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   document.getElementById('placeholder').style.display='block';
   document.getElementById('storyText').style.display='none';
   document.getElementById('dots').style.display='none';
-  document.getElementById('speakRow').style.display='none';
+  document.getElementById('speakBtn').style.display='none';
   hgWrap.classList.remove('thinking');
   stopSpeaking();
 });
@@ -481,7 +495,7 @@ document.getElementById('storyBtn').addEventListener('click', async () => {
   document.getElementById('placeholder').style.display='none';
   document.getElementById('storyText').style.display='none';
   document.getElementById('dots').style.display='flex';
-  document.getElementById('speakRow').style.display='none';
+  document.getElementById('speakBtn').style.display='none';
   hgWrap.classList.add('thinking');
   document.getElementById('storyBtn').disabled=true;
   stopSpeaking();
@@ -533,7 +547,7 @@ ${hintLine}
     document.getElementById('dots').style.display='none';
     document.getElementById('storyText').textContent=story;
     document.getElementById('storyText').style.display='block';
-    document.getElementById('speakRow').style.display='flex';
+    document.getElementById('speakBtn').style.display='flex';
     hgWrap.classList.remove('thinking');
     currentStory=story;
   } catch(err) {
