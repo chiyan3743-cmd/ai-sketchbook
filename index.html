@@ -310,7 +310,7 @@ function showKeyModal() {
 function hideKeyModal() { keyModal.style.display = 'none'; }
 
 document.getElementById('keySaveBtn').addEventListener('click', () => {
-  const k = keyInput.value.trim();
+  const k = keyInput.value.trim().replace(/[^\x20-\x7E]/g, '');
   if (!k.startsWith('sk-or-')) { alert('올바른 OpenRouter 키를 입력해주세요. (sk-or- 로 시작해요)'); return; }
   saveKey(k);
   hideKeyModal();
@@ -500,7 +500,7 @@ ${hintLine}
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${OPENROUTER_KEY}`,
         'HTTP-Referer': 'https://chiyan3743-cmd.github.io/ai-sketchbook',
-        'X-Title': 'AI 말하는 스케치북'
+        'X-Title': 'AI Sketchbook'
       },
       body: JSON.stringify({
         model: 'google/gemma-4-31b-it:free',
