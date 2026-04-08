@@ -459,7 +459,13 @@ function describeStroke(s) {
 document.getElementById('storyBtn').addEventListener('click', async () => {
   const OPENROUTER_KEY = getKey();
   if (!OPENROUTER_KEY) { showKeyModal(); return; }
-  if (strokes.length===0) return;
+  console.log('strokes:', strokes.length, 'key:', OPENROUTER_KEY ? 'ok' : 'empty');
+  if (strokes.length===0) {
+    document.getElementById('placeholder').style.display='block';
+    document.getElementById('storyText').textContent='선을 그어봐요! 점만 찍으면 이야기를 못 만들어요 😊';
+    document.getElementById('storyText').style.display='block';
+    return;
+  }
   const imgData=canvas.toDataURL('image/png').split(',')[1];
   const teacherHint=document.getElementById('teacherPrompt').value.trim();
   const log=strokes.map((s,i)=>{const d=describeStroke(s);return d?`${i+1}번째: ${d}`:null;}).filter(Boolean).join('\n');
@@ -524,9 +530,10 @@ ${hintLine}
     document.getElementById('speakRow').style.display='flex';
     hgWrap.classList.remove('thinking');
     currentStory=story;
-  } catch {
+  } catch(err) {
+    console.error('API 오류:', err);
     document.getElementById('dots').style.display='none';
-    document.getElementById('storyText').textContent='앗! 연결이 안 됐어요. 다시 해볼까요? 😊';
+    document.getElementById('storyText').textContent='앗! 연결이 안 됐어요. 다시 해볼까요? 😊 (' + err.message + ')';
     document.getElementById('storyText').style.display='block';
     hgWrap.classList.remove('thinking');
   }
