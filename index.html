@@ -8,18 +8,26 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{
-  min-height:100%;
+  height:100%;
   background:#1A0A3C;
   display:flex;align-items:flex-start;justify-content:center;
   font-family:'Nunito',sans-serif;padding:16px;
 }
 .book{
   display:flex;flex-direction:column;
-  width:min(760px,98vw);
+  width:min(900px,98vw);
   background:#5B3FA8;
   border-radius:24px;
   padding:10px;
   box-shadow:0 8px 32px rgba(0,0,0,0.45);
+}
+@media (min-width:768px) and (orientation:landscape){
+  html,body{overflow:hidden;}
+  .book{height:calc(100vh - 32px);}
+  .main{flex:1;min-height:0;}
+  .canvas-panel{min-height:0;}
+  .story-inner{min-height:70px;}
+  .story-words{font-size:18px;}
 }
 .topbar{display:flex;align-items:center;gap:10px;padding:6px 6px 10px;}
 .topbar-btn{
@@ -480,17 +488,14 @@ document.getElementById('storyBtn').addEventListener('click', async () => {
 
   const hintLine=teacherHint?`\n오늘의 그리기 주제: "${teacherHint}"\n이 주제를 이야기에 자연스럽게 녹여주세요.\n`:'';
   const prompt=`당신은 특수교육 학생을 위한 따뜻한 이야기 선생님이에요.
-
-학생이 그림을 그린 순서 기록:
-${log}
 ${hintLine}
-완성된 그림도 첨부했어요.
+학생이 그린 그림을 보고, 그 안에 어떤 세계가 있을지 상상해서 짧은 이야기를 만들어주세요.
 
 [이야기 만들기 규칙]
-- 그리기 순서와 흐름을 이야기의 뼈대로 삼아주세요.
+- 그림을 있는 그대로 묘사하지 마세요. 그림 속 주인공이 무언가를 하는 이야기를 써주세요.
 - 초등학교 특수교육 대상 장애 학생이 이해할 수 있게, 아주 짧고 쉬운 문장 3~4개로만 써주세요.
 - 어려운 낱말은 쓰지 마세요.
-- 그림 속 내용이 살아 움직이는 것처럼 따뜻하고 밝게 써주세요.
+- 따뜻하고 밝게, 동화처럼 써주세요.
 - 이야기만 써주세요. 인사말이나 설명은 필요 없어요.`;
 
   try {
