@@ -34,9 +34,11 @@ html,body{
 .topbar-btn svg{width:24px;height:24px;}
 .app-title{
   font-family:'Gaegu',cursive;font-size:28px;font-weight:700;
-  color:#F5C800;margin-left:6px;
+  color:#F5C800;margin-left:6px;flex:1;
   text-shadow:0 2px 0 rgba(0,0,0,0.25);
 }
+.topbar-btn.key-btn{background:#7B5FD4;box-shadow:0 3px 0 #4A2E96;font-size:18px;}
+.topbar-btn.key-btn:hover{filter:brightness(1.15);}
 .prompt-bar{
   background:#4A2E96;border-radius:14px;
   padding:9px 12px;margin-bottom:8px;
@@ -136,9 +138,58 @@ input[type=range].brush-size::-webkit-slider-thumb{
 .speak-btn:hover{filter:brightness(1.08);}
 .speak-btn.speaking{background:#00AAFF;color:white;box-shadow:0 3px 0 #0077CC;animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.75;}}
+
+/* API 키 설정 모달 */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,4,30,0.85);
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;padding:16px;
+}
+.modal-box{
+  background:#5B3FA8;border-radius:24px;padding:28px 24px;
+  width:min(460px,98vw);box-shadow:0 8px 40px rgba(0,0,0,0.6);
+  border:2px solid #7B5FD4;
+}
+.modal-title{font-family:'Gaegu',cursive;font-size:26px;color:#F5C800;margin-bottom:6px;text-align:center;}
+.modal-desc{font-family:'Gaegu',cursive;font-size:15px;color:#C0B0E8;text-align:center;margin-bottom:20px;line-height:1.6;}
+.modal-label{font-family:'Gaegu',cursive;font-size:15px;color:#F5C800;margin-bottom:6px;display:block;}
+.modal-input{
+  width:100%;background:#3D2480;border:2px solid #7B5FD4;border-radius:12px;
+  padding:10px 14px;font-size:14px;color:#fff;outline:none;
+  font-family:'Nunito',sans-serif;transition:border-color .15s;
+  margin-bottom:16px;
+}
+.modal-input:focus{border-color:#F5C800;}
+.modal-input::placeholder{color:#FFFFFF44;font-size:13px;}
+.modal-save-btn{
+  width:100%;padding:13px;background:#00AAFF;color:white;
+  border:none;border-radius:14px;font-size:18px;font-weight:800;
+  cursor:pointer;font-family:'Gaegu',cursive;
+  box-shadow:0 4px 0 #0077CC;transition:filter .15s,transform .1s;
+}
+.modal-save-btn:hover{filter:brightness(1.1);}
+.modal-save-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #0077CC;}
+.modal-hint{font-family:'Gaegu',cursive;font-size:13px;color:#9080C0;text-align:center;margin-top:12px;line-height:1.5;}
 </style>
 </head>
 <body>
+
+<!-- API 키 설정 모달 -->
+<div class="modal-overlay" id="keyModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-title">🔑 선생님 설정</div>
+    <div class="modal-desc">AI 이야기 기능을 사용하려면<br>OpenRouter API 키가 필요해요!</div>
+    <label class="modal-label">OpenRouter API 키</label>
+    <input class="modal-input" id="keyInput" type="password"
+      placeholder="sk-or-v1-... 형식의 키를 붙여넣으세요">
+    <button class="modal-save-btn" id="keySaveBtn">저장하고 시작하기 ✨</button>
+    <div class="modal-hint">
+      openrouter.ai → 로그인 → Keys 메뉴에서 발급받으세요.<br>
+      한 번 저장하면 이 브라우저에서는 다시 입력 안 해도 돼요.
+    </div>
+  </div>
+</div>
+
 <div class="book">
   <div class="topbar">
     <div class="topbar-btn" id="backBtn" title="이전으로">
@@ -155,6 +206,7 @@ input[type=range].brush-size::-webkit-slider-thumb{
       </svg>
     </div>
     <span class="app-title">🎨 AI 말하는 스케치북</span>
+    <div class="topbar-btn key-btn" id="keyChangeBtn" title="API 키 변경">🔑</div>
   </div>
 
   <div class="prompt-bar">
@@ -243,8 +295,30 @@ input[type=range].brush-size::-webkit-slider-thumb{
 </div>
 
 <script>
-// ⚠️ OpenRouter API 키 — 여기에 붙여넣으세요
-const OPENROUTER_KEY = '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';
+// API 키: 코드에 저장하지 않고 브라우저 localStorage에서 불러옴
+function getKey() { return localStorage.getItem('or_api_key') || ''; }
+function saveKey(k) { localStorage.setItem('or_api_key', k.trim()); }
+
+const keyModal = document.getElementById('keyModal');
+const keyInput = document.getElementById('keyInput');
+
+function showKeyModal() {
+  keyInput.value = '';
+  keyModal.style.display = 'flex';
+  setTimeout(() => keyInput.focus(), 100);
+}
+function hideKeyModal() { keyModal.style.display = 'none'; }
+
+document.getElementById('keySaveBtn').addEventListener('click', () => {
+  const k = keyInput.value.trim();
+  if (!k.startsWith('sk-or-')) { alert('올바른 OpenRouter 키를 입력해주세요. (sk-or- 로 시작해요)'); return; }
+  saveKey(k);
+  hideKeyModal();
+});
+document.getElementById('keyChangeBtn').addEventListener('click', showKeyModal);
+
+// 키가 없으면 시작 시 모달 표시
+if (!getKey()) showKeyModal();
 
 const COLORS = [
   '#E53935','#FB8C00','#F9A825',
@@ -383,6 +457,8 @@ function describeStroke(s) {
 }
 
 document.getElementById('storyBtn').addEventListener('click', async () => {
+  const OPENROUTER_KEY = getKey();
+  if (!OPENROUTER_KEY) { showKeyModal(); return; }
   if (strokes.length===0) return;
   const imgData=canvas.toDataURL('image/png').split(',')[1];
   const teacherHint=document.getElementById('teacherPrompt').value.trim();
@@ -433,6 +509,14 @@ ${hintLine}
       })
     });
     const data = await res.json();
+    if (data.error) {
+      document.getElementById('dots').style.display='none';
+      document.getElementById('storyText').textContent='앗! 키가 올바르지 않아요. 🔑 버튼으로 다시 확인해봐요!';
+      document.getElementById('storyText').style.display='block';
+      hgWrap.classList.remove('thinking');
+      document.getElementById('storyBtn').disabled=false;
+      return;
+    }
     const story = data.choices?.[0]?.message?.content || '이야기를 만들지 못했어요. 다시 해볼까요? 😊';
     document.getElementById('dots').style.display='none';
     document.getElementById('storyText').textContent=story;
