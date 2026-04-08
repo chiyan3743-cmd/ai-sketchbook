@@ -521,8 +521,9 @@ ${hintLine}
     });
     const data = await res.json();
     if (data.error) {
+      console.error('API 에러 상세:', JSON.stringify(data.error));
       document.getElementById('dots').style.display='none';
-      document.getElementById('storyText').textContent='앗! 키가 올바르지 않아요. 🔑 버튼으로 다시 확인해봐요!';
+      document.getElementById('storyText').textContent='오류: ' + (data.error.message || JSON.stringify(data.error));
       document.getElementById('storyText').style.display='block';
       hgWrap.classList.remove('thinking');
       document.getElementById('storyBtn').disabled=false;
